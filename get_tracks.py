@@ -2,30 +2,36 @@ import requests
 import os
 
 
-TRACKS_URL='https://api.spotify.com/v1/playlists/42RfKkO1XLVjk7Of5t44LG/tracks'
+def get_tracks():
 
-TRACKS_TOKEN = input('Get Auth token from https://developer.spotify.com/console/get-playlist/')
+    chosen_one = input("Enter the playlist id ")
+    TRACKS_URL='https://api.spotify.com/v1/playlists/'+chosen_one+'/tracks'
 
-HEADERS={
-    'Authorization': "Bearer {}".format(TRACKS_TOKEN)
-}
+    TRACKS_TOKEN = input('Get Auth token from https://developer.spotify.com/console/get-playlist/')
 
-r = requests.get(url=TRACKS_URL,headers=HEADERS)
-z = r.json()
+    HEADERS={
+        'Authorization': "Bearer {}".format(TRACKS_TOKEN)
+    }
 
-z["items"][0]['track']['name'], z["items"][0]['track']['artists'][0]['name']
+    r = requests.get(url=TRACKS_URL,headers=HEADERS)
+    z = r.json()
 
-os.chdir('./output')
 
-playlist_name = input("Input playlist name")
 
-playlist_name += '.txt'
+    #Creates a new folder where songs will be saved 
+    if(not os.path.exists('./output')):
+        os.mkdir('./output')
+    os.chdir('./output')
 
-f=open(playlist_name,'w+')
-f.close()
 
-with open('BoilerRoom.txt','w') as f:
-    for i in z['items']:
-        f.write(i['track']['name']+':'+i['track']['artists'][0]['name']+'\n')
-    
-    
+    playlist_name = input("Input playlist name")
+
+    playlist_name += '.txt'
+
+    f=open(playlist_name,'w+')
+    f.close()
+
+    with open(playlist_name,'w') as f:
+        for i in z['items']:
+            f.write(i['track']['name']+':'+i['track']['artists'][0]['name']+'\n')
+             
