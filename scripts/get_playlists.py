@@ -2,7 +2,7 @@ import requests
 
 
 def get_playlists():
-    USER_ID = input("enter user id")
+    USER_ID = input("enter user id ")
 
     PLAYLISTS_TOKEN= input("Go to to get token https://developer.spotify.com/console/get-current-user-playlists/?limit=&offset=")
 

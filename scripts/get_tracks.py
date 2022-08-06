@@ -24,7 +24,7 @@ def get_tracks():
     os.chdir('./output')
 
 
-    playlist_name = input("Input playlist name")
+    playlist_name = input("Input playlist name ")
 
     playlist_name += '.txt'
 
@@ -33,5 +33,5 @@ def get_tracks():
 
     with open(playlist_name,'w') as f:
         for i in z['items']:
-            f.write(i['track']['name']+':'+i['track']['artists'][0]['name']+'\n')
+            f.write(i['track']['name']+'-'+i['track']['artists'][0]['name']+'\n')
              
