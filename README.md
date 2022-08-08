@@ -5,6 +5,5 @@ App to get Spotify playlists/tracks and download them via youtube-dl or other me
 
 # How to Get Started
 Runs with requests package 
-
 Run ./main.py
 Downloads will appear in outputs folder
