@@ -6,7 +6,7 @@ def get_playlists():
 
     PLAYLISTS_TOKEN= input("Go to to get token https://developer.spotify.com/console/get-current-user-playlists/?limit=&offset=")
 
-    URL = 'https://api.spotify.com/v1/users/{}/playlists'.format(USER_ID)
+    URL = 'https://api.spotify.com/v1/me/playlists'
 
 
     HEADERS={
@@ -22,6 +22,5 @@ def get_playlists():
     #For now prints out items on the terminal/eventually want to make CLI to choose playlist directly
     for i in y['items']:
         print(i['name']+': '+i['id'])
-
 
 
