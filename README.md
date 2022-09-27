@@ -1,10 +1,3 @@
-# spot-dl
-App to get Spotify playlists/tracks and download them via youtube-dl or other methods
+# spot-dj
+Spotify Clone that displays playlists/tracks in library with added audio features to help DJs create and edit sets
 
-
-
-# How to Get Started
-Runs with requests package 
-Run ./main.py
-
-Run output/download.sh and Downloads will appear in output folder
