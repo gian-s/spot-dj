@@ -3,12 +3,7 @@ import requests
 import base64
 
 # URLS
-AUTH_URL = 'https://accounts.spotify.com/authorize'
-TOKEN_URL = 'https://accounts.spotify.com/api/token'
-BASE_URL = 'https://api.spotify.com/v1/'
 
-CLIENT_ID=''
-CLIENT_SECRET=''
 
 #%%
 provider_url = AUTH_URL
