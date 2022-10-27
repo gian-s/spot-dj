@@ -34,7 +34,7 @@ export default function useAuth(code) {
         .then((res) => {
           setAccessToken(res.data.accessToken);
           setExpiresIn(res.data.expiresIn);
-          console.log(res.data);
+          //console.log(res.data);
         })
         .catch(() => {
           window.location = "/";
