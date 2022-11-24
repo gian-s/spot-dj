@@ -7,6 +7,7 @@ require("dotenv").config();
 
 const { parse, stringify } = require("envfile");
 const pathToenvFile = "../.env";
+const get_data = require("./get_data");
 
 require("dotenv").config({ path: pathToenvFile });
 
@@ -74,7 +75,7 @@ app.post("/login", (req, res) => {
   spotifyApi
     .authorizationCodeGrant(code)
     .then((data) => {
-      //console.log(data.body);
+      console.log(data.body.access_token);
       res.json({
         accessToken: data.body.access_token,
         refreshToken: data.body.refresh_token,
@@ -104,6 +105,7 @@ app.post("/refresh", (req, res) => {
         accessToken: data.body.accessToken,
         expiresIn: data.body.expiresIn,
       });
+
       // Save the access token so that it's used in future calls
       //spotifyApi.setAccessToken(data.body['access_token']);
     })
