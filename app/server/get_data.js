@@ -11,6 +11,10 @@ const { features } = require("process");
 const pathToenvFile = "../.env";
 
 require("dotenv").config({ path: pathToenvFile });
+
+const access_token =
+  "BQBnaSj9asHxPC3EKzlc-K1ROZr7H5f90z1eLSqy3HJzUMmqKYmYcnhMyyzw90eAxQxVrBBoahgc2HXW1_vr1T9ZxPwQA9SAZFOVjzsW_rjIciN7fqS1UDh9Kijo2WUz0qlSJa3i1to_MXrVw7udXTSP4qdXUe147dRHEK8O95Z8XeMqEVjGkb8fxjMAhwOOqPeQKT8R5IzAGtY";
+
 async function getPlaylist(access_token, user_id, limit, offset) {
   const spotifyApi = new SpotifyWebApi({
     redirectUri: process.env.REACT_APP_REDIRECT_URI,
@@ -48,7 +52,22 @@ async function getPlaylists(access_token, MAX_PLAYLISTS) {
   //console.log(ret);
   return ret;
 }
+async function getAudioFeatures(access_token, track_id_arr) {
+  const spotifyApi = new SpotifyWebApi({
+    redirectUri: process.env.REACT_APP_REDIRECT_URI,
+    clientId: process.env.REACT_APP_CLIENT_ID,
+    clientSecret: process.env.REACT_APP_CLIENT_SECRET,
+  });
+  spotifyApi.setAccessToken(access_token);
 
+  try {
+    let response = await spotifyApi.getAudioFeaturesForTracks(track_id_arr);
+    return response;
+  } catch {
+    console.log("Error Ocurred in getAudioFeatures()");
+    return null;
+  }
+}
 async function getTrackList(access_token, playlist_id, limit, offset) {
   //var ret = [];
   const spotifyApi = new SpotifyWebApi({
@@ -58,33 +77,38 @@ async function getTrackList(access_token, playlist_id, limit, offset) {
   });
 
   spotifyApi.setAccessToken(access_token);
+  try {
+    var tracks = await spotifyApi.getPlaylistTracks(playlist_id, {
+      limit: limit,
+      offset: offset,
+    });
+    tracks = tracks.body;
+  } catch {
+    console.log("error in getting playlistTracks");
+    tracks = null;
+  }
 
-  var tracks = await spotifyApi.getPlaylistTracks(playlist_id, {
-    limit: limit,
-    offset: offset,
-  });
-  tracks = tracks.body;
-
+  //Formatting JSON
   const track_name = tracks.items.map(({ track }) => track.name);
-
   const added_at = tracks.items.map(({ added_at }) => added_at);
-
   const track_id = tracks.items.map(({ track }) => track.id);
-
   const track_duration = tracks.items.map(({ track }) => track.duration_ms);
-
   const artist_name = tracks.items.map(({ track }) => track.artists);
-
   const artist_arr = [];
   for (let i = 0; i < artist_name.length; i++) {
     artist_arr.push(artist_name[i].map(({ name }) => name));
   }
+
+  const audio_features = await getAudioFeatures(access_token, track_id);
+  console.log(audio_features.body.audio_features);
+
   var ret = {
     track_name: track_name,
     track_id: track_id,
     track_duration: track_duration,
     artists: artist_arr,
     added_at: added_at,
+    audio_features: audio_features.body.audio_features,
   };
   return ret;
 }
@@ -96,11 +120,13 @@ async function allTracks(access_token, playlist_id, MAX_PLAYLISTS) {
     track_duration: [],
     artists: [],
     added_at: [],
+    audio_features: [],
   };
 
   for (let i = 0; i < MAX_PLAYLISTS; i += 50) {
     var iter_feat = await getTrackList(access_token, playlist_id, 50, i);
     //console.log(iter_feat);
+
     features.track_name = features.track_name.concat(iter_feat.track_name);
     features.track_id = features.track_id.concat(iter_feat.track_id);
     features.track_duration = features.track_duration.concat(
@@ -108,6 +134,9 @@ async function allTracks(access_token, playlist_id, MAX_PLAYLISTS) {
     );
     features.artists = features.artists.concat(iter_feat.artists);
     features.added_at = features.added_at.concat(iter_feat.added_at);
+    features.audio_features = features.audio_features.concat(
+      iter_feat.audio_features
+    );
   }
   return features;
 }
@@ -123,7 +152,34 @@ async function returnTracks(access_token) {
       track: tracks,
     };
   });
-  return await Promise.all(playlists);
+  try {
+    var ret = await Promise.all(playlists);
+  } catch {
+    ret = null;
+    console.log("returnTracks() failed to resolve");
+  }
+
+  return ret;
 }
 
-module.exports.returnTracks = returnTracks;
+const test_tracks = [
+  "6tlUFZscsKCqGmdTYI8t3E",
+  "3MklLppNRhuAupVGO3uNW2",
+  "7G7qAvwD7kGBRnY9D1G0o3",
+  "6rR2xDDQoQDmiOY9hTYsju",
+  "68FhagAoZr9Ld8oCp9JoYP",
+  "5bF00VrMY3FwnQDgoP4Gnk",
+];
+
+const test_ret = returnTracks(access_token);
+test_ret.then((data) => {
+  console.log(data.audio_features);
+});
+
+// async function getRet(access_token) {
+//   var audio_features = await getAudioFeatures(access_token, test_tracks);
+//   console.log(audio_features);
+//   return audio_features.body.audio_features;
+// }
+
+// getRet(access_token);
