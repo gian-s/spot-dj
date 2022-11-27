@@ -12,9 +12,7 @@ const pathToenvFile = "../.env";
 
 require("dotenv").config({ path: pathToenvFile });
 
-const access_token =
-  "BQBnaSj9asHxPC3EKzlc-K1ROZr7H5f90z1eLSqy3HJzUMmqKYmYcnhMyyzw90eAxQxVrBBoahgc2HXW1_vr1T9ZxPwQA9SAZFOVjzsW_rjIciN7fqS1UDh9Kijo2WUz0qlSJa3i1to_MXrVw7udXTSP4qdXUe147dRHEK8O95Z8XeMqEVjGkb8fxjMAhwOOqPeQKT8R5IzAGtY";
-
+const access_token = ""
 async function getPlaylist(access_token, user_id, limit, offset) {
   const spotifyApi = new SpotifyWebApi({
     redirectUri: process.env.REACT_APP_REDIRECT_URI,
