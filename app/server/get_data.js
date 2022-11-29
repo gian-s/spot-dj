@@ -12,7 +12,6 @@ const pathToenvFile = "../.env";
 
 require("dotenv").config({ path: pathToenvFile });
 
-const access_token = ""
 async function getPlaylist(access_token, user_id, limit, offset) {
   const spotifyApi = new SpotifyWebApi({
     redirectUri: process.env.REACT_APP_REDIRECT_URI,
@@ -42,14 +41,11 @@ async function getPlaylists(access_token, MAX_PLAYLISTS) {
       50,
       i
     );
-    //console.log(arr1)
-    //arr1.push.apply(arr1,ret)
-    //console.log(ret)
     ret.push.apply(ret, arr1);
   }
-  //console.log(ret);
   return ret;
 }
+
 async function getAudioFeatures(access_token, track_id_arr) {
   const spotifyApi = new SpotifyWebApi({
     redirectUri: process.env.REACT_APP_REDIRECT_URI,
@@ -57,23 +53,21 @@ async function getAudioFeatures(access_token, track_id_arr) {
     clientSecret: process.env.REACT_APP_CLIENT_SECRET,
   });
   spotifyApi.setAccessToken(access_token);
-
   try {
     let response = await spotifyApi.getAudioFeaturesForTracks(track_id_arr);
     return response;
   } catch {
     console.log("Error Ocurred in getAudioFeatures()");
-    return null;
+    return [];
   }
 }
+
 async function getTrackList(access_token, playlist_id, limit, offset) {
-  //var ret = [];
   const spotifyApi = new SpotifyWebApi({
     redirectUri: process.env.REACT_APP_REDIRECT_URI,
     clientId: process.env.REACT_APP_CLIENT_ID,
     clientSecret: process.env.REACT_APP_CLIENT_SECRET,
   });
-
   spotifyApi.setAccessToken(access_token);
   try {
     var tracks = await spotifyApi.getPlaylistTracks(playlist_id, {
@@ -82,10 +76,9 @@ async function getTrackList(access_token, playlist_id, limit, offset) {
     });
     tracks = tracks.body;
   } catch {
-    console.log("error in getting playlistTracks");
-    tracks = null;
+    console.log("error in getting playlistTracks()");
+    tracks = [];
   }
-
   //Formatting JSON
   const track_name = tracks.items.map(({ track }) => track.name);
   const added_at = tracks.items.map(({ added_at }) => added_at);
@@ -96,10 +89,7 @@ async function getTrackList(access_token, playlist_id, limit, offset) {
   for (let i = 0; i < artist_name.length; i++) {
     artist_arr.push(artist_name[i].map(({ name }) => name));
   }
-
   const audio_features = await getAudioFeatures(access_token, track_id);
-  console.log(audio_features.body.audio_features);
-
   var ret = {
     track_name: track_name,
     track_id: track_id,
@@ -124,7 +114,6 @@ async function allTracks(access_token, playlist_id, MAX_PLAYLISTS) {
   for (let i = 0; i < MAX_PLAYLISTS; i += 50) {
     var iter_feat = await getTrackList(access_token, playlist_id, 50, i);
     //console.log(iter_feat);
-
     features.track_name = features.track_name.concat(iter_feat.track_name);
     features.track_id = features.track_id.concat(iter_feat.track_id);
     features.track_duration = features.track_duration.concat(
@@ -132,18 +121,21 @@ async function allTracks(access_token, playlist_id, MAX_PLAYLISTS) {
     );
     features.artists = features.artists.concat(iter_feat.artists);
     features.added_at = features.added_at.concat(iter_feat.added_at);
-    features.audio_features = features.audio_features.concat(
-      iter_feat.audio_features
-    );
+
+    if (iter_feat.audio_features[0] != null) {
+      features.audio_features = features.audio_features.concat(
+        iter_feat.audio_features
+      );
+    }
   }
+  //we can assert that the track_ids match in each array
   return features;
 }
 
-async function returnTracks(access_token) {
+async function getData(access_token) {
   const names = await getPlaylists(access_token, 200);
   const playlists = names.map(async (item) => {
     const tracks = await allTracks(access_token, item.id, 200);
-    //console.log(tracks);
     return {
       playlist_id: item.id,
       playlist_name: item.name,
@@ -160,24 +152,14 @@ async function returnTracks(access_token) {
   return ret;
 }
 
-const test_tracks = [
-  "6tlUFZscsKCqGmdTYI8t3E",
-  "3MklLppNRhuAupVGO3uNW2",
-  "7G7qAvwD7kGBRnY9D1G0o3",
-  "6rR2xDDQoQDmiOY9hTYsju",
-  "68FhagAoZr9Ld8oCp9JoYP",
-  "5bF00VrMY3FwnQDgoP4Gnk",
-];
-
-const test_ret = returnTracks(access_token);
-test_ret.then((data) => {
-  console.log(data.audio_features);
-});
+module.exports = {
+  getData,
+};
 
 // async function getRet(access_token) {
-//   var audio_features = await getAudioFeatures(access_token, test_tracks);
-//   console.log(audio_features);
-//   return audio_features.body.audio_features;
+//   var audio_features = await getData(access_token);
+//   audio_features.then((data) => {
+//     console.log(data.track.audio_features);
+//   });
 // }
-
 // getRet(access_token);

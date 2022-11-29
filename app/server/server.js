@@ -4,14 +4,19 @@ const cors = require("cors");
 const SpotifyWebApi = require("spotify-web-api-node");
 const bodyParser = require("body-parser");
 require("dotenv").config();
-
+const User = require("./model/userModel");
+const connectDB = require("./config/db");
 const { parse, stringify } = require("envfile");
 const pathToenvFile = "../.env";
-const get_data = require("./get_data");
+
+//const { getData } = require("./get_data");
+
+const asyncHandler = require("express-async-handler");
 
 require("dotenv").config({ path: pathToenvFile });
 
 //console.log(process.env.SCOPES.split(' '));
+connectDB();
 
 const app = express();
 app.use(cors());
@@ -64,29 +69,55 @@ setEnv("REACT_APP_APP_URL", authorizeURL);
 
 console.log(process.env.REACT_APP_APP_URL);
 
-app.post("/login", (req, res) => {
-  const spotifyApi = new SpotifyWebApi({
-    redirectUri: process.env.REACT_APP_REDIRECT_URI,
-    clientId: process.env.REACT_APP_CLIENT_ID,
-    clientSecret: process.env.REACT_APP_CLIENT_SECRET,
-  });
+app.post(
+  "/login",
+  asyncHandler(async (req, res) => {
+    const user_id = process.env.REACT_APP_USER;
+    const userExists = await User.findOne({ user_id });
 
-  const code = req.body.code;
-  spotifyApi
-    .authorizationCodeGrant(code)
-    .then((data) => {
-      console.log(data.body.access_token);
-      res.json({
-        accessToken: data.body.access_token,
-        refreshToken: data.body.refresh_token,
-        expiresIn: data.body.expires_in,
-      });
-    })
-    .catch(() => {
-      res.sendStatus(400);
-      //console.log('Something went wrong!', err);
+    const spotifyApi = new SpotifyWebApi({
+      redirectUri: process.env.REACT_APP_REDIRECT_URI,
+      clientId: process.env.REACT_APP_CLIENT_ID,
+      clientSecret: process.env.REACT_APP_CLIENT_SECRET,
     });
-});
+
+    const code = req.body.code;
+    spotifyApi
+      .authorizationCodeGrant(code)
+      .then((data) => {
+        console.log(data.body.access_token);
+        res.json({
+          accessToken: data.body.access_token,
+          refreshToken: data.body.refresh_token,
+          expiresIn: data.body.expires_in,
+        });
+        if (userExists) {
+          const update_access = { user_access_token: data.body.access_token };
+          const update_refresh = {
+            user_refresh_token: data.body.refresh_token,
+          };
+          (async function () {
+            let doc1 = await User.findOneAndUpdate(user_id, update_access);
+            let doc2 = await User.findOneAndUpdate(user_id, update_refresh);
+          })();
+        } else {
+          (async function () {
+            await User.create({
+              user_id: user_id,
+              user_access_token: data.body.access_token,
+              user_refresh_token: data.body.refresh_token,
+            });
+          })();
+        }
+        //add/update access token to our database
+        //call playlistController to populate database or do nothing
+      })
+      .catch(() => {
+        res.sendStatus(400);
+        //console.log('Something went wrong!', err);
+      });
+  })
+);
 
 app.post("/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
@@ -105,7 +136,7 @@ app.post("/refresh", (req, res) => {
         accessToken: data.body.accessToken,
         expiresIn: data.body.expiresIn,
       });
-
+      //update access token to our database
       // Save the access token so that it's used in future calls
       //spotifyApi.setAccessToken(data.body['access_token']);
     })
