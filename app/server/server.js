@@ -5,17 +5,16 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const bodyParser = require("body-parser");
 require("dotenv").config();
 const User = require("./model/userModel");
+const Playlist = require("./model/playlistModel");
 const connectDB = require("./config/db");
 const { parse, stringify } = require("envfile");
 const pathToenvFile = "../.env";
 
-//const { getData } = require("./get_data");
-
 const asyncHandler = require("express-async-handler");
+const { getData } = require("./get_data");
 
 require("dotenv").config({ path: pathToenvFile });
 
-//console.log(process.env.SCOPES.split(' '));
 connectDB();
 
 const app = express();
@@ -65,10 +64,10 @@ function setEnv(key, value) {
     });
   });
 }
+//Calls function and sets environment variables needed to call Spotify's API
 setEnv("REACT_APP_APP_URL", authorizeURL);
 
-console.log(process.env.REACT_APP_APP_URL);
-
+//Handles login route
 app.post(
   "/login",
   asyncHandler(async (req, res) => {
@@ -82,40 +81,83 @@ app.post(
     });
 
     const code = req.body.code;
-    spotifyApi
-      .authorizationCodeGrant(code)
-      .then((data) => {
-        console.log(data.body.access_token);
-        res.json({
-          accessToken: data.body.access_token,
-          refreshToken: data.body.refresh_token,
-          expiresIn: data.body.expires_in,
-        });
-        if (userExists) {
-          const update_access = { user_access_token: data.body.access_token };
-          const update_refresh = {
-            user_refresh_token: data.body.refresh_token,
-          };
-          (async function () {
-            let doc1 = await User.findOneAndUpdate(user_id, update_access);
-            let doc2 = await User.findOneAndUpdate(user_id, update_refresh);
-          })();
-        } else {
-          (async function () {
-            await User.create({
-              user_id: user_id,
-              user_access_token: data.body.access_token,
-              user_refresh_token: data.body.refresh_token,
-            });
-          })();
-        }
-        //add/update access token to our database
-        //call playlistController to populate database or do nothing
-      })
-      .catch(() => {
-        res.sendStatus(400);
-        //console.log('Something went wrong!', err);
+    spotifyApi.authorizationCodeGrant(code).then((data) => {
+      console.log(data.body.access_token);
+      res.json({
+        accessToken: data.body.access_token,
+        refreshToken: data.body.refresh_token,
+        expiresIn: data.body.expires_in,
       });
+      if (userExists) {
+        const update_access = { user_access_token: data.body.access_token };
+        const update_refresh = {
+          user_refresh_token: data.body.refresh_token,
+        };
+
+        (async function () {
+          let doc1 = await User.findOneAndUpdate(user_id, update_access);
+          let doc2 = await User.findOneAndUpdate(user_id, update_refresh);
+        })();
+
+        (async function () {
+          const everything = await getData(data.body.access_token);
+          console.log(everything);
+          //useful line of code to find objectId by user_id
+          //const mgbd_user = await User.findOne({ user_id: user_id }).exec();
+
+          // for (let i = 0; i < everything.length; i++) {
+          let a = everything[0];
+          //console.log(curr_list);
+          //console.log(curr_list.playlist_id);
+          //console.log(curr_list.track.artists);
+          console.log(a.track.audio_features);
+          //const artists = [["Fred Again", "Haii"], ["Mall Grab"]];
+
+          try {
+            const test_playlist = await Playlist.create({
+              playlist: {
+                user: user_id,
+                playlist_id: a.playlist_id,
+                playlist_name: a.playlist_name,
+                track: {
+                  artists: a.track.artists,
+                  added_at: a.track.added_at,
+                  track_duration: a.track.track_duration,
+                  track_id: a.track.track_id,
+                  track_name: a.track.track_name,
+                },
+                audio_features: {
+                  danceability: a.track.audio_features.danceability,
+                  energy: a.track.audio_features.energy,
+                  key: a.track.audio_features.key,
+                  loudness: a.track.audio_features.loudness,
+                  mode: a.track.audio_features.mode,
+                  speechiness: a.track.audio_features.speechiness,
+                  acousticness: a.track.audio_features.acousticness,
+                  instrumentalness: a.track.audio_features.instrumentalness,
+                  liveness: a.track.audio_features.liveness,
+                  valence: a.track.audio_features.valence,
+                  tempo: a.track.audio_features.tempo,
+                  id: a.track.audio_features.id,
+                  duration_ms: a.track.audio_features.duration_ms,
+                  time_signature: a.track.audio_features.time_signature,
+                },
+              },
+            });
+          } catch (error) {
+            console.log(error);
+          }
+
+          Playlist.findOne({ user: user_id }, function (err, docs) {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log("Result : ", docs);
+            }
+          });
+        })();
+      }
+    });
   })
 );
 
@@ -143,8 +185,6 @@ app.post("/refresh", (req, res) => {
     .catch((err) => {
       console.log(err);
       res.sendStatus(400);
-
-      //console.log('Something went wrong!', err);
     });
 });
 
