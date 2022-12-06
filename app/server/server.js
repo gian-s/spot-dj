@@ -4,14 +4,19 @@ const cors = require("cors");
 const SpotifyWebApi = require("spotify-web-api-node");
 const bodyParser = require("body-parser");
 require("dotenv").config();
+
+//MONGO IMPORTS
 const User = require("./model/userModel");
 const Playlist = require("./model/playlistModel");
 const connectDB = require("./config/db");
+const Redis = require("redis");
+
 const { parse, stringify } = require("envfile");
 const pathToenvFile = "../.env";
-
 const asyncHandler = require("express-async-handler");
 const { getData } = require("./get_data");
+
+const redisClient = Redis.createClient();
 
 require("dotenv").config({ path: pathToenvFile });
 
@@ -73,7 +78,7 @@ app.post(
   asyncHandler(async (req, res) => {
     const user_id = process.env.REACT_APP_USER;
     const userExists = await User.findOne({ user_id });
-
+    console.log(userExists);
     const spotifyApi = new SpotifyWebApi({
       redirectUri: process.env.REACT_APP_REDIRECT_URI,
       clientId: process.env.REACT_APP_CLIENT_ID,
@@ -106,11 +111,11 @@ app.post(
           //const mgbd_user = await User.findOne({ user_id: user_id }).exec();
 
           // for (let i = 0; i < everything.length; i++) {
-          let a = everything[0];
+          let a = everything[i];
           //console.log(curr_list);
           //console.log(curr_list.playlist_id);
           //console.log(curr_list.track.artists);
-          console.log(a.track.audio_features);
+          console.log(a);
           //const artists = [["Fred Again", "Haii"], ["Mall Grab"]];
 
           try {
@@ -126,22 +131,6 @@ app.post(
                   track_id: a.track.track_id,
                   track_name: a.track.track_name,
                 },
-                audio_features: {
-                  danceability: a.track.audio_features.danceability,
-                  energy: a.track.audio_features.energy,
-                  key: a.track.audio_features.key,
-                  loudness: a.track.audio_features.loudness,
-                  mode: a.track.audio_features.mode,
-                  speechiness: a.track.audio_features.speechiness,
-                  acousticness: a.track.audio_features.acousticness,
-                  instrumentalness: a.track.audio_features.instrumentalness,
-                  liveness: a.track.audio_features.liveness,
-                  valence: a.track.audio_features.valence,
-                  tempo: a.track.audio_features.tempo,
-                  id: a.track.audio_features.id,
-                  duration_ms: a.track.audio_features.duration_ms,
-                  time_signature: a.track.audio_features.time_signature,
-                },
               },
             });
           } catch (error) {
@@ -156,6 +145,12 @@ app.post(
             }
           });
         })();
+      } else {
+        User.create({
+          user_id: user_id,
+          user_access_token: data.body.access_token,
+          user_refresh_token: data.body.refresh_token,
+        });
       }
     });
   })
