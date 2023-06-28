@@ -38,11 +38,16 @@ function Row(props) {
           >
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
+
         </TableCell>
         <TableCell component="th" scope="row">
           {row.playlist_id}
         </TableCell>
+        
         <TableCell>{row.playlist_name}</TableCell>
+
+
+
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -56,6 +61,8 @@ function Row(props) {
                   <TableRow>
                     <TableCell align="left">id</TableCell>
                     <TableCell align="left">Track Name</TableCell>
+                    <TableCell align='left'>BPM</TableCell>
+                    <TableCell align='left'>Key</TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -66,6 +73,8 @@ function Row(props) {
                         {tracksRow.track_id}
                       </TableCell>
                       <TableCell>{tracksRow.track_name}</TableCell>
+                      <TableCell>{tracksRow.track_tempo}</TableCell>
+                      <TableCell>{tracksRow.track_key}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -78,22 +87,11 @@ function Row(props) {
   );
 }
 
-Row.propTypes = {
-  row: PropTypes.shape({
-    playlist_id: PropTypes.number.isRequired,
-    history: PropTypes.arrayOf(
-      PropTypes.shape({
-        track_id: PropTypes.number.isRequired,
-        track_name: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-    playlist_name: PropTypes.string.isRequired,
-  }).isRequired,
-};
 
 export default function CollapsibleTable({ code }) {
   const rows = Dashboard(code);
-  console.log(rows);
+  //console.log("Inside COmponent")
+  //console.log(rows);
   return (
     <TableContainer component={Paper}>
       <Table aria-label="collapsible table">

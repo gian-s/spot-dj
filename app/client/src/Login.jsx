@@ -6,7 +6,8 @@ import { Container } from 'react-bootstrap';
 
 //console.log(process.env.REACT_APP_APP_URL);
 
-const AUTH_URL = process.env.REACT_APP_APP_URL;
+const AUTH_URL = import.meta.env.VITE_APP_URL;
+console.log(AUTH_URL);
 export default function Login() {
   return (
     <div>
