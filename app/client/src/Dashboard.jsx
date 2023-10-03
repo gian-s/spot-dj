@@ -12,6 +12,39 @@ export default function Dashboard(code) {
   const accessToken = useAuth(code);
   const [playlists, setPlaylists] = useState([]);
 
+  const pitch = {
+    'minor':{
+      0:'8B',
+      1:'3B',
+      2:'10B',
+      3:'5B',
+      4:'12B',
+      5:'7B',
+      6:'2B',
+      7:'9B',
+      8:'4B',
+      9:'11B',
+      10:'6B',
+      11:'1B',
+    },
+    'major': {
+      //major key
+      0: '5A',
+      1: '12A',
+      2: '7A',
+      3: '2A',
+      4: '9A',
+      5: '4A',
+      6: '11A',
+      7: '6A',
+      8: '1A',
+      9: '8A',
+      10: '3A',
+      11: '10A'
+    }
+  }
+
+
   useEffect(() => {
     if (!accessToken) return;
     spotifyApi.setAccessToken(accessToken);
@@ -53,27 +86,32 @@ export default function Dashboard(code) {
         limit: limit,
         offset: offset,
       });
-      console.log(tracks);
+      //console.log(tracks);
       return tracks.body.items.map(async (item) => {
         try {
           const audio_feature = await spotifyApi.getAudioFeaturesForTrack(item.track.id);
+
+
           
         return {
           track_id: item.track.id,
           track_name: item.track.name,
           track_tempo: audio_feature.body.tempo,
-          track_key: audio_feature.body.key
+          track_key:audio_feature.body.mode?pitch.major[audio_feature.body.key]:pitch.minor[audio_feature.body.key],
+          track_energy:audio_feature.body.energy
         };
+
+        
         } catch (error) {
-          const audio_feature = {body:{tempo:-1,key:-1}}
+          const audio_feature = {body:{tempo:-1,key:-1,energy:-1}}
         return {
           track_id: item.track.id,
           track_name: item.track.name,
           track_tempo: audio_feature.body.tempo,
-          track_key: audio_feature.body.key
-        };
+          track_key: audio_feature.key,
+          track_energy: audio_feature.energy
         }
-      });
+    }});
     }
     async function allTracks(playlist_id) {
       var ret = [];
@@ -100,3 +138,7 @@ export default function Dashboard(code) {
   }, [accessToken]);
   return playlists;
 }
+
+
+
+
