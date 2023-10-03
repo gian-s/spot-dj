@@ -63,6 +63,7 @@ function Row(props) {
                     <TableCell align="left">Track Name</TableCell>
                     <TableCell align='left'>BPM</TableCell>
                     <TableCell align='left'>Key</TableCell>
+                    <TableCell align='left'>Energy</TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -86,6 +87,7 @@ function Row(props) {
     </React.Fragment>
   );
 }
+
 
 
 export default function CollapsibleTable({ code }) {
