@@ -71,11 +71,12 @@ function Row(props) {
                   {row.tracks.map((tracksRow) => (
                     <TableRow key={tracksRow.track_id}>
                       <TableCell component="th" scope="row">
-                        {tracksRow.track_id}
+                        {tracksRow.track_id} 
                       </TableCell>
                       <TableCell>{tracksRow.track_name}</TableCell>
                       <TableCell>{tracksRow.track_tempo}</TableCell>
                       <TableCell>{tracksRow.track_key}</TableCell>
+                      <TableCell>{tracksRow.track_energy}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
